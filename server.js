@@ -8,4 +8,6 @@ app.get('/*', function(req, res) {
     res.sendFile(__dirname + '/src/index.html');
 });
 
-app.listen(process.env.PORT);
+app.listen(process.env.PORT || 8000, function(){
+  console.log("Server running at localhost:" + (process.env.PORT || 8000));
+});

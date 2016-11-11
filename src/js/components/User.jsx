@@ -17,27 +17,35 @@ var User = React.createClass({
     /*
     This method will be called by React after the first render. It's a perfect place to load
     data with AJAX. This User component gets mounted in the DOM as soon as the URL is /user/:username
-    
+
     When that happens, react-router will pass a `params` prop containing every parameter in the URL, just like
     when we get URL parameters in Express with req.params. Here, it's this.props.params. Since we called our route
     parameter `username`, it's available under this.props.params.username
-    
+
     We're using it to make an API call to GitHub to fetch the user data for the username in the URL. Once we receive
     the data -- in the callback -- we call `setState` to put the user data in our state. This will trigger a re-render.
     When `render` gets called again, `this.state.user` exists and we get the user info display instead of "LOADING..."
     */
+    fetchData: function(){
+      var that = this; // What's this?? Make sure you remember or understand what this line does
+
+      $.getJSON(`https://api.github.com/users/${this.props.params.username}?access_token=96c3698e49ce51870e2a7d675c39edcba16d5ffb`)
+          .then(
+              function(user) {
+                  // Why that.setState instead of this.setState??
+                  that.setState({
+                      user: user
+                  });
+              }
+          );
+    },
     componentDidMount: function() {
-        var that = this; // What's this?? Make sure you remember or understand what this line does
-        
-        $.getJSON(`https://api.github.com/users/${this.props.params.username}`)
-            .then(
-                function(user) {
-                    // Why that.setState instead of this.setState??
-                    that.setState({
-                        user: user
-                    });
-                }
-            );
+      this.fetchData();
+    },
+    componentDidUpdate: function(prevProps, prevState){
+      if(prevProps.params.username !== this.props.params.username){
+        this.fetchData();
+      }
     },
     /*
     This method is used as a mapping function. Eventually this could be factored out to its own component.
@@ -57,10 +65,10 @@ var User = React.createClass({
         if (!this.state.user) {
             return (<div className="user-page">LOADING...</div>);
         }
-        
+
         // If we get to this part of `render`, then the user is loaded
         var user = this.state.user;
-        
+
         // Gather up some number stats about the user, to be used in a map below
         var stats = [
             {
@@ -79,7 +87,7 @@ var User = React.createClass({
                 url: `/user/${this.props.params.username}/following`
             }
         ];
-        
+
         // Look in app.css for the styles that make this look like it does
         return (
             <div className="user-page">
@@ -89,11 +97,12 @@ var User = React.createClass({
                         <h2 className="user-info__title">{user.login} ({user.name})</h2>
                         <p className="user-info__bio">{user.bio}</p>
                     </Link>
-                
+
                     <ul className="user-info__stats">
-                        {stats.map(this.renderStat)}              
+                        {stats.map(this.renderStat)}
                     </ul>
                 </div>
+                {this.props.children}
             </div>
         );
     }
